@@ -10,12 +10,111 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Sample {
-  id        Int      @id @default(autoincrement())
-  name      String
-  code      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// model Sample {
+//   id        Int      @id @default(autoincrement())
+//   name      String
+//   code      String   @unique
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
 
-  @@map("samples") // if you want to use snake_case format
+//   @@map("samples") // if you want to use snake_case format
+// }
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
+  gender   Gender @default(MALE)
+  role     Role   @default(USER)
+
+  referralCode ReferralCode?
+  couponCode   CouponCode?
+}
+
+model Event {
+  id        Int       @id @default(autoincrement())
+  title     String
+  details   String    @db.LongText
+  coverImg  String
+  price     Float     @default(0)
+  type      EventType @default(FREE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  //FK category
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  //FK city
+  city       City     @relation(fields: [cityId], references: [id])
+  cityId     Int
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  events Event[]
+}
+
+model ReferralCode {
+  id      Int    @id @default(autoincrement())
+  refCode String @unique
+
+  couponCodes CouponCode[]
+
+  //FK user
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+}
+
+model CouponCode {
+  id           Int          @id @default(autoincrement())
+  coupon       String       @unique
+  couponStatus CouponStatus @default(NOT_USED)
+
+  //FK user (yg melakukan redeem)
+  user              User         @relation(fields: [userUseReferralId], references: [id])
+  userUseReferralId Int          @unique
+  //FK referral code
+  referralCode      ReferralCode @relation(fields: [refferalCodeId], references: [id])
+  refferalCodeId    Int
+}
+
+model City {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  events Event[]
+
+  //FK province
+  province   Province @relation(fields: [provinceId], references: [id])
+  provinceId Int
+}
+
+model Province {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  cities City[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum EventType {
+  FREE
+  PAID
+}
+
+enum CouponStatus {
+  USED
+  NOT_USED
 }

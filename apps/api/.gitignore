@@ -1,3 +1,7 @@
 node_modules
 # Keep environment variables out of version control
 .env
+.env.development
+
+#node mailer inside helpers folder
+nodemailer.ts
