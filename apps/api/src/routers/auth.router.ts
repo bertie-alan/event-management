@@ -1,6 +1,6 @@
-import { AuthController } from "@/controllers/auth.controller";
-import { regisValidation } from "@/middleware/validator";
-import { verifyToken } from "@/middleware/verifyToken";
+import { AuthController } from "../controllers/auth.controller";
+import { regisValidation } from "../middleware/validator";
+import { verifyLoginToken, verifyToken } from "../middleware/verifyToken";
 import { Router } from "express";
 
 
@@ -18,6 +18,7 @@ export class AuthRouter {
         this.router.post("/register", regisValidation, this.authController.registerUser);
         this.router.post("/forgot-password", this.authController.forgotPassword);
         this.router.patch("/update-password", verifyToken, this.authController.updatePassword);
+        this.router.post("/login", this.authController.login);
 
     }
 
