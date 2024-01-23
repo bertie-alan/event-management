@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { compare, genSalt, hash } from "bcrypt";
-import prisma from "@/prisma";
+import prisma from "../prisma";
 import { sign } from "jsonwebtoken";
 import path from "path";
 import fs from "fs";
 import handlebars from "handlebars";
-import { transporter } from "@/helpers/nodemailer";
-import { redisClient } from "@/helpers/redis";
+import { transporter } from "../helpers/nodemailer";
+import { redisClient } from "../helpers/redis";
 
 export class AuthController {
     async registerUser (req: Request, res: Response, next: NextFunction) {
@@ -17,7 +17,7 @@ export class AuthController {
             });
 
             if (checkUser) {
-                throw new Error("Email has been taken, please use another email.")
+                return res.status(400).send("Email has been taken, please use another email.")
             }
 
             const salt = await genSalt(10);
@@ -133,6 +133,51 @@ export class AuthController {
         }
     }
 
-    
+    async login (req: Request, res: Response, next: NextFunction) {
+        try {
+            const { password, username } = req.body;
+
+            const checkUser = await prisma.user.findUnique({
+                where: { 
+                    username
+            }
+            });
+            
+            if (!checkUser) {
+                return res.status(401).send("invalid username")
+            }
+            
+            const isValidPassword = await compare(password, checkUser?.password);
+            
+            if (!isValidPassword) {
+                return res.status(401).send("invalid password")
+            }
+
+            if (checkUser && isValidPassword) {
+                const token = sign({
+                    id: checkUser?.id,
+                    role: checkUser?.role,
+                    email: checkUser?.email,
+                    username: checkUser?.username
+                }, "flint123");
+
+                console.log("Login token : ", token);
+
+                await redisClient.setEx(`loginRedis:${req.body.username}`, 3600, token)
+                
+                return res.status(200).send({
+                    success: true,
+                    message: `Login successful, token : ${token}`,
+                })
+                
+            } else {
+                return res.status(401).send("invalid username or password")
+            }
+        } catch (error: any) {
+            console.log(error);
+            next(error);
+        }
+    }
+
 
 }

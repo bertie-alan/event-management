@@ -19,7 +19,32 @@ export const verifyToken = async(req: Request, res: Response, next: NextFunction
         }
 
         const redisCheckToken = await redisClient.get(`forgotPasswordRedis:${req.body.email}`);
-        console.log(token, redisCheckToken, "lalala");
+        console.log(token, redisCheckToken);
+        
+        if (token === redisCheckToken) {
+            const verifiedToken = verify(token, "flint123");
+
+            req.dataUser = verifiedToken;
+            next();
+        } else {
+            return res.status(401).send("Token is invalid or expired");
+        }
+
+    } catch (error: any) {
+        return res.status(400).send("Token error");
+    }
+}
+
+export const verifyLoginToken = async(req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = req.header("Authorization")?.split(" ")[1];
+        
+        if (!token) {
+            return res.status(400).send("Token not found");
+        }
+
+        const redisCheckToken = await redisClient.get(`loginRedis:${req.body.username}`);
+        console.log("verify login token : ", token, redisCheckToken);
         
         if (token === redisCheckToken) {
             const verifiedToken = verify(token, "flint123");
