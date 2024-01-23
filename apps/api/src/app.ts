@@ -9,6 +9,7 @@ import express, {
 import cors from 'cors';
 import { PORT } from './config';
 import { AuthRouter } from './routers/auth.router';
+import { redisClient } from './helpers/redis';
 // import { SampleRouter } from './routers/sample.router';
 
 export default class App {
@@ -72,7 +73,8 @@ export default class App {
 // }
 
 
-  public start(): void {
+  public async start(): Promise<void> {
+    await redisClient.connect();
     this.app.listen(PORT, () => {
       console.log(`  ➜  [API] Local:   http://localhost:${PORT}/`);
     });
