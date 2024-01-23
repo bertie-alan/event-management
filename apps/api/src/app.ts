@@ -13,7 +13,7 @@ import { redisClient } from './helpers/redis';
 // import { SampleRouter } from './routers/sample.router';
 
 export default class App {
-  private app: Express;
+  readonly app: Express;
 
   constructor() {
     this.app = express();
