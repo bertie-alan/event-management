@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import handlebars from "handlebars";
 import { transporter } from "@/helpers/nodemailer";
+import { redisClient } from "@/helpers/redis";
 
 export class AuthController {
     async registerUser (req: Request, res: Response, next: NextFunction) {
@@ -62,6 +63,7 @@ export class AuthController {
                 
                 console.log(token);
                 
+                await redisClient.setEx(`forgotPasswordRedis:${req.body.email}`, 3600, token)
                 
                 //generate email nodemailer
                 const templateMail = path.join(__dirname, "../templates", "forgotpassword.hbs");

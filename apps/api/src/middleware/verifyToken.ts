@@ -1,5 +1,6 @@
 import { verify } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { redisClient } from "../helpers/redis";
 
 declare global {
     namespace Express {
@@ -17,11 +18,17 @@ export const verifyToken = async(req: Request, res: Response, next: NextFunction
             return res.status(400).send("Token not found");
         }
 
-        const verifiedToken = verify(token, "flint123");
+        const redisCheckToken = await redisClient.get(`forgotPasswordRedis:${req.body.email}`);
+        console.log(token, redisCheckToken, "lalala");
+        
+        if (token === redisCheckToken) {
+            const verifiedToken = verify(token, "flint123");
 
-        req.dataUser = verifiedToken;
-    
-        next();
+            req.dataUser = verifiedToken;
+            next();
+        } else {
+            return res.status(401).send("Token is invalid or expired");
+        }
 
     } catch (error: any) {
         return res.status(400).send("Token error");
